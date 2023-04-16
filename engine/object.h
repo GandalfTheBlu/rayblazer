@@ -4,6 +4,7 @@
 #include <float.h>
 #include <string>
 #include <memory>
+#include <cassert>
 
 class Object;
 
@@ -49,7 +50,7 @@ public:
                 {
                     return false;
                 }
-                if (value->normal.IsZero())
+                if (len(value->normal) == 0.f)
                 {
                     return false;
                 }

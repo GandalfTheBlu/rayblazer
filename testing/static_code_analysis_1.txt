@@ -1,0 +1,76 @@
+Severity	Code	Description	Project	File	Line	Suppression State
+Warning	C26451	Arithmetic overflow: Using operator '-' on a 4 byte value and then casting the result to a 8 byte value. Cast the value to the wider type before calling operator '-' to avoid overflow (io.2).	tester	C:\Users\Gandalf\git\rayblazer\engine\pbr.h	12	
+Warning	C26451	Arithmetic overflow: Using operator '*' on a 4 byte value and then casting the result to a 8 byte value. Cast the value to the wider type before calling operator '*' to avoid overflow (io.2).	tester	C:\Users\Gandalf\git\rayblazer\engine\pbr.h	38	
+Warning	C4244	'return': conversion from 'double' to 'float', possible loss of data	engine	C:\Users\Gandalf\git\rayblazer\engine\vec3.h	138	
+Warning	C4244	'=': conversion from 'double' to 'float', possible loss of data	engine	C:\Users\Gandalf\git\rayblazer\engine\mat4.h	87	
+Warning	C4244	'=': conversion from 'double' to 'float', possible loss of data	engine	C:\Users\Gandalf\git\rayblazer\engine\mat4.h	88	
+Warning	C4244	'=': conversion from 'double' to 'float', possible loss of data	engine	C:\Users\Gandalf\git\rayblazer\engine\mat4.h	89	
+Warning	C4244	'initializing': conversion from 'double' to 'float', possible loss of data	engine	C:\Users\Gandalf\git\rayblazer\engine\mat4.h	106	
+Warning	C4244	'initializing': conversion from 'double' to 'float', possible loss of data	engine	C:\Users\Gandalf\git\rayblazer\engine\mat4.h	107	
+Warning	C4244	'=': conversion from 'double' to 'float', possible loss of data	engine	C:\Users\Gandalf\git\rayblazer\engine\mat4.h	109	
+Warning	C4244	'=': conversion from 'double' to 'float', possible loss of data	engine	C:\Users\Gandalf\git\rayblazer\engine\mat4.h	111	
+Warning	C4244	'=': conversion from 'double' to 'float', possible loss of data	engine	C:\Users\Gandalf\git\rayblazer\engine\mat4.h	115	
+Warning	C4244	'=': conversion from 'double' to 'float', possible loss of data	engine	C:\Users\Gandalf\git\rayblazer\engine\mat4.h	116	
+Warning	C4305	'=': truncation from 'double' to 'float'	engine	C:\Users\Gandalf\git\rayblazer\engine\mat4.h	228	
+Warning	C4244	'=': conversion from 'double' to 'float', possible loss of data	engine	C:\Users\Gandalf\git\rayblazer\engine\mat4.h	232	
+Warning	C4305	'=': truncation from 'double' to 'float'	engine	C:\Users\Gandalf\git\rayblazer\engine\mat4.h	255	
+Warning	C4244	'=': conversion from 'double' to 'float', possible loss of data	engine	C:\Users\Gandalf\git\rayblazer\engine\mat4.h	259	
+Warning	C4018	'<': signed/unsigned mismatch	engine	C:\Users\Gandalf\git\rayblazer\engine\raytracer.cc	27	
+Warning	C4018	'<': signed/unsigned mismatch	engine	C:\Users\Gandalf\git\rayblazer\engine\raytracer.cc	29	
+Warning	C4018	'<': signed/unsigned mismatch	engine	C:\Users\Gandalf\git\rayblazer\engine\raytracer.cc	32	
+Warning	C4244	'initializing': conversion from 'double' to 'float', possible loss of data	engine	C:\Users\Gandalf\git\rayblazer\engine\raytracer.cc	175	
+Warning	C4244	'argument': conversion from 'double' to 'const float', possible loss of data	engine	C:\Users\Gandalf\git\rayblazer\engine\raytracer.cc	176	
+Warning	C4244	'return': conversion from 'double' to 'float', possible loss of data	engine	C:\Users\Gandalf\git\rayblazer\engine\vec3.h	138	
+Warning	C4305	'initializing': truncation from 'double' to 'float'	engine	C:\Users\Gandalf\git\rayblazer\engine\material.h	23	
+Warning	C4244	'=': conversion from 'double' to 'float', possible loss of data	engine	C:\Users\Gandalf\git\rayblazer\engine\mat4.h	87	
+Warning	C4244	'=': conversion from 'double' to 'float', possible loss of data	engine	C:\Users\Gandalf\git\rayblazer\engine\mat4.h	88	
+Warning	C4244	'=': conversion from 'double' to 'float', possible loss of data	engine	C:\Users\Gandalf\git\rayblazer\engine\mat4.h	89	
+Warning	C4244	'initializing': conversion from 'double' to 'float', possible loss of data	engine	C:\Users\Gandalf\git\rayblazer\engine\mat4.h	106	
+Warning	C4244	'initializing': conversion from 'double' to 'float', possible loss of data	engine	C:\Users\Gandalf\git\rayblazer\engine\mat4.h	107	
+Warning	C4244	'=': conversion from 'double' to 'float', possible loss of data	engine	C:\Users\Gandalf\git\rayblazer\engine\mat4.h	109	
+Warning	C4244	'=': conversion from 'double' to 'float', possible loss of data	engine	C:\Users\Gandalf\git\rayblazer\engine\mat4.h	111	
+Warning	C4244	'=': conversion from 'double' to 'float', possible loss of data	engine	C:\Users\Gandalf\git\rayblazer\engine\mat4.h	115	
+Warning	C4244	'=': conversion from 'double' to 'float', possible loss of data	engine	C:\Users\Gandalf\git\rayblazer\engine\mat4.h	116	
+Warning	C4305	'=': truncation from 'double' to 'float'	engine	C:\Users\Gandalf\git\rayblazer\engine\mat4.h	228	
+Warning	C4244	'=': conversion from 'double' to 'float', possible loss of data	engine	C:\Users\Gandalf\git\rayblazer\engine\mat4.h	232	
+Warning	C4305	'=': truncation from 'double' to 'float'	engine	C:\Users\Gandalf\git\rayblazer\engine\mat4.h	255	
+Warning	C4244	'=': conversion from 'double' to 'float', possible loss of data	engine	C:\Users\Gandalf\git\rayblazer\engine\mat4.h	259	
+Warning	C4244	'return': conversion from 'double' to 'float', possible loss of data	engine	C:\Users\Gandalf\git\rayblazer\engine\pbr.h	12	
+Warning	C4244	'initializing': conversion from 'double' to 'float', possible loss of data	engine	C:\Users\Gandalf\git\rayblazer\engine\pbr.h	27	
+Warning	C4244	'initializing': conversion from 'double' to 'float', possible loss of data	engine	C:\Users\Gandalf\git\rayblazer\engine\pbr.h	33	
+Warning	C4244	'initializing': conversion from 'double' to 'float', possible loss of data	engine	C:\Users\Gandalf\git\rayblazer\engine\pbr.h	36	
+Warning	C4244	'argument': conversion from 'double' to 'float', possible loss of data	engine	C:\Users\Gandalf\git\rayblazer\engine\pbr.h	38	
+Warning	C4244	'=': conversion from 'double' to 'float', possible loss of data	engine	C:\Users\Gandalf\git\rayblazer\engine\pbr.h	38	
+Warning	C4244	'argument': conversion from 'double' to 'float', possible loss of data	engine	C:\Users\Gandalf\git\rayblazer\engine\pbr.h	43	
+Warning	C4244	'=': conversion from 'double' to 'float', possible loss of data	engine	C:\Users\Gandalf\git\rayblazer\engine\material.cc	55	
+Warning	C4244	'=': conversion from 'double' to 'float', possible loss of data	engine	C:\Users\Gandalf\git\rayblazer\engine\material.cc	60	
+Warning	C4244	'=': conversion from 'double' to 'float', possible loss of data	engine	C:\Users\Gandalf\git\rayblazer\engine\material.cc	61	
+Warning	C4244	'return': conversion from 'double' to 'float', possible loss of data	tester	C:\Users\Gandalf\git\rayblazer\engine\vec3.h	138	
+Warning	C4244	'=': conversion from 'double' to 'float', possible loss of data	tester	C:\Users\Gandalf\git\rayblazer\engine\mat4.h	87	
+Warning	C4244	'=': conversion from 'double' to 'float', possible loss of data	tester	C:\Users\Gandalf\git\rayblazer\engine\mat4.h	88	
+Warning	C4244	'=': conversion from 'double' to 'float', possible loss of data	tester	C:\Users\Gandalf\git\rayblazer\engine\mat4.h	89	
+Warning	C4244	'initializing': conversion from 'double' to 'float', possible loss of data	tester	C:\Users\Gandalf\git\rayblazer\engine\mat4.h	106	
+Warning	C4244	'initializing': conversion from 'double' to 'float', possible loss of data	tester	C:\Users\Gandalf\git\rayblazer\engine\mat4.h	107	
+Warning	C4244	'=': conversion from 'double' to 'float', possible loss of data	tester	C:\Users\Gandalf\git\rayblazer\engine\mat4.h	109	
+Warning	C4244	'=': conversion from 'double' to 'float', possible loss of data	tester	C:\Users\Gandalf\git\rayblazer\engine\mat4.h	111	
+Warning	C4244	'=': conversion from 'double' to 'float', possible loss of data	tester	C:\Users\Gandalf\git\rayblazer\engine\mat4.h	115	
+Warning	C4244	'=': conversion from 'double' to 'float', possible loss of data	tester	C:\Users\Gandalf\git\rayblazer\engine\mat4.h	116	
+Warning	C4305	'=': truncation from 'double' to 'float'	tester	C:\Users\Gandalf\git\rayblazer\engine\mat4.h	228	
+Warning	C4244	'=': conversion from 'double' to 'float', possible loss of data	tester	C:\Users\Gandalf\git\rayblazer\engine\mat4.h	232	
+Warning	C4305	'=': truncation from 'double' to 'float'	tester	C:\Users\Gandalf\git\rayblazer\engine\mat4.h	255	
+Warning	C4244	'=': conversion from 'double' to 'float', possible loss of data	tester	C:\Users\Gandalf\git\rayblazer\engine\mat4.h	259	
+Warning	C4244	'return': conversion from 'double' to 'float', possible loss of data	tester	C:\Users\Gandalf\git\rayblazer\engine\pbr.h	12	
+Warning	C4244	'initializing': conversion from 'double' to 'float', possible loss of data	tester	C:\Users\Gandalf\git\rayblazer\engine\pbr.h	27	
+Warning	C4244	'initializing': conversion from 'double' to 'float', possible loss of data	tester	C:\Users\Gandalf\git\rayblazer\engine\pbr.h	33	
+Warning	C4244	'initializing': conversion from 'double' to 'float', possible loss of data	tester	C:\Users\Gandalf\git\rayblazer\engine\pbr.h	36	
+Warning	C4244	'argument': conversion from 'double' to 'float', possible loss of data	tester	C:\Users\Gandalf\git\rayblazer\engine\pbr.h	38	
+Warning	C4244	'=': conversion from 'double' to 'float', possible loss of data	tester	C:\Users\Gandalf\git\rayblazer\engine\pbr.h	38	
+Warning	C4244	'argument': conversion from 'double' to 'float', possible loss of data	tester	C:\Users\Gandalf\git\rayblazer\engine\pbr.h	43	
+Warning	C4305	'initializing': truncation from 'double' to 'float'	tester	C:\Users\Gandalf\git\rayblazer\engine\material.h	23	
+Warning	C4267	'argument': conversion from 'size_t' to 'unsigned int', possible loss of data	tester	C:\Users\Gandalf\git\rayblazer\projects\tester\tester.cpp	126	
+Warning	C4305	'=': truncation from 'double' to 'float'	tester	C:\Users\Gandalf\git\rayblazer\projects\tester\tester.cpp	132	
+Warning	C4244	'=': conversion from 'double' to 'float', possible loss of data	tester	C:\Users\Gandalf\git\rayblazer\projects\tester\tester.cpp	185	
+Warning	C4244	'=': conversion from 'double' to 'float', possible loss of data	tester	C:\Users\Gandalf\git\rayblazer\projects\tester\tester.cpp	186	
+Warning	C4244	'=': conversion from 'double' to 'float', possible loss of data	tester	C:\Users\Gandalf\git\rayblazer\projects\tester\tester.cpp	187	
+Warning	C4244	'initializing': conversion from 'double' to 'float', possible loss of data	tester	C:\Users\Gandalf\git\rayblazer\projects\tester\tester.cpp	209	
+Warning	C4267	'argument': conversion from 'size_t' to 'int', possible loss of data	tester	C:\Users\Gandalf\git\rayblazer\projects\tester\tester.cpp	220	
