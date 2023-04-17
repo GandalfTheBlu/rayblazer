@@ -127,7 +127,7 @@ int main(int argc, char* argv[])
 
 	{
 		Material* mat = new Material();
-		mat->type = "Lambertian";
+		mat->type = MaterialType::Lambertian;
 		mat->color = { 0.5,0.5,0.5 };
 		mat->roughness = 0.3;
 		Sphere* ground = new Sphere(1000, { 0,-1000, -1 }, mat);
@@ -137,7 +137,7 @@ int main(int argc, char* argv[])
 	for (int i = 0; i < numberOfSpheres; i++)
 	{
 		Material* mat = new Material();
-		mat->type = "Lambertian";
+		mat->type = MaterialType::Lambertian;
 		float r = MyRandomFloat01();
 		float g = MyRandomFloat01();
 		float b = MyRandomFloat01();
@@ -172,6 +172,7 @@ int main(int argc, char* argv[])
 
 	// render "loop"
 	const int numberOfIterations = 300;
+
 	for (int i = 0; i < numberOfIterations; i++)
 	{
 		moveDir = normalize(moveDir);

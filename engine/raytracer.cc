@@ -1,5 +1,5 @@
 #include "raytracer.h"
-#include <random>
+#include "random.h"
 #include <cassert>
 
 //------------------------------------------------------------------------------
@@ -21,26 +21,24 @@ Raytracer::Raytracer(unsigned w, unsigned h, std::vector<Color>& frameBuffer, un
 void
 Raytracer::Raytrace()
 {
-    static int leet = 1337;
-    std::mt19937 generator (leet++);
-    std::uniform_real_distribution<float> dis(0.0f, 1.0f);
+    static float aspect = (float)(this->width / this->height);
 
-    for (int x = 0; x < this->width; ++x)
+    for (int y = 0; y < this->height; y++)
     {
-        for (int y = 0; y < this->height; ++y)
+        const int row = y * this->width;
+        for (int x = 0; x < this->width; x++)
         {
             Color color;
             for (int i = 0; i < this->rpp; ++i)
             {
-                float u = ((float(x + dis(generator)) * (1.0f / this->width)) * 2.0f) - 1.0f;
-                float v = ((float(y + dis(generator)) * (1.0f / this->height)) * 2.0f) - 1.0f;
+                float u = (((float(x + RandomFloat()) * (1.0f / this->width)) * 2.0f) - 1.0f) * aspect;
+                float v = (((float(y + RandomFloat()) * (1.0f / this->height)) * 2.0f) - 1.0f);
 
-                vec3 direction = vec3(u, v, -1.0f);
+                vec3 direction(u, v, -1.0f);
                 direction = transform(direction, this->frustum);
                 
-                Ray* ray = new Ray(get_position(this->view), direction);
-                color += this->TracePath(*ray, 0);
-                delete ray;
+                Ray ray(get_position(this->view), direction);
+                color += this->TracePath(ray);
             }
 
             // divide by number of samples per pixel, to get the average of the distribution
@@ -48,89 +46,57 @@ Raytracer::Raytrace()
             color.g /= this->rpp;
             color.b /= this->rpp;
 
-            this->frameBuffer[y * this->width + x] += color;
+            this->frameBuffer[row + x] += color;
         }
     }
 }
 
 //------------------------------------------------------------------------------
 /**
- * @parameter n - the current bounce level
 */
 Color
-Raytracer::TracePath(Ray ray, unsigned n)
+Raytracer::TracePath(const Ray& ray)
 {
     vec3 hitPoint;
     vec3 hitNormal;
     Object* hitObject = nullptr;
     float distance = FLT_MAX;
+    Ray updatedRay = ray;
+    Color color = {1.f, 1.f, 1.f};
 
-    if (Raycast(ray, hitPoint, hitNormal, hitObject, distance, this->objects))
+    for (int i = 0; i < bounces; i++)
     {
-        Ray* scatteredRay = new Ray(hitObject->ScatterRay(ray, hitPoint, hitNormal));
-        if (n < this->bounces)
+        if (!Raycast(updatedRay, hitPoint, hitNormal, hitObject, distance))
         {
-            return hitObject->GetColor() * this->TracePath(*scatteredRay, n + 1);
+            color = color * Skybox(updatedRay.m);
+            break;
         }
-        delete scatteredRay;
 
-        if (n == this->bounces)
-        {
-            return {0,0,0};
-        }
+        color = color * hitObject->GetColor();
+
+        hitObject->ScatterRay(updatedRay, hitPoint, hitNormal);
     }
 
-    return this->Skybox(ray.m);
+    return color;
 }
 
 //------------------------------------------------------------------------------
 /**
 */
 bool
-Raytracer::Raycast(Ray ray, vec3& hitPoint, vec3& hitNormal, Object*& hitObject, float& distance, std::vector<Object*> world)
+Raytracer::Raycast(const Ray& ray, vec3& hitPoint, vec3& hitNormal, Object*& hitObject, float& distance)
 {
     bool isHit = false;
     HitResult closestHit;
-    int numHits = 0;
-    HitResult hit;
 
-    // First, sort the world objects
-    std::sort(world.begin(), world.end());
-
-    // then add all objects into a remaining objects set of unique objects, so that we don't trace against the same object twice
-    std::vector<Object*> uniqueObjects;
-    for (size_t i = 0; i < world.size(); ++i)
+    for(int i=0; i<this->objects.size(); i++)
     {
-        Object* obj = world[i];
-        std::vector<Object*>::iterator it = std::find_if(uniqueObjects.begin(), uniqueObjects.end(), 
-                [obj](const auto& val)
-                {
-                    return (obj->GetName() == val->GetName() && obj->GetId() == val->GetId());
-                }
-            );
+        Object* object = this->objects[i];
 
-        if (it == uniqueObjects.end())
+        if (object->Intersect(ray, closestHit.t, closestHit))
         {
-            uniqueObjects.push_back(obj);
-        }
-    }
-
-    while (uniqueObjects.size() > 0)
-    {
-        auto objectIt = uniqueObjects.begin();
-        Object* object = *objectIt;
-
-        auto opt = object->Intersect(ray, closestHit.t);
-        if (opt.HasValue())
-        {
-            hit = opt.Get();
-            assert(hit.t < closestHit.t);
-            closestHit = hit;
-            closestHit.object = object;
             isHit = true;
-            numHits++;
         }
-        uniqueObjects.erase(objectIt);
     }
 
     hitPoint = closestHit.p;
@@ -162,9 +128,7 @@ Raytracer::Clear()
 void
 Raytracer::UpdateMatrices()
 {
-    mat4 inverseView = inverse(this->view); 
-    mat4 basis = transpose(inverseView);
-    this->frustum = basis;
+    this->frustum = transpose(inverse(this->view));
 }
 
 //------------------------------------------------------------------------------
@@ -173,7 +137,7 @@ Raytracer::UpdateMatrices()
 Color
 Raytracer::Skybox(vec3 direction)
 {
-    float t = 0.5*(direction.y + 1.0);
-    vec3 vec = vec3(1.0, 1.0, 1.0) * (1.0 - t) + vec3(0.5, 0.7, 1.0) * t;
-    return {(float)vec.x, (float)vec.y, (float)vec.z};
+    float t = 0.5f*(direction.y + 1.f);
+    float it = 1.f - t;
+    return {it + 0.5f*t, it + 0.7f*t, it + 1.f*t};
 }

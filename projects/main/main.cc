@@ -20,6 +20,9 @@ int main()
     const unsigned w = 200;
     const unsigned h = 100;
     framebuffer.resize(w * h);
+
+    int pixelsSize = 10;
+    wnd.SetSize(w*pixelsSize, h*pixelsSize);
     
     int raysPerPixel = 1;
     int maxBounces = 5;
@@ -28,7 +31,7 @@ int main()
 
     // Create some objects
     Material* mat = new Material();
-    mat->type = "Lambertian";
+    mat->type = MaterialType::Lambertian;
     mat->color = { 0.5,0.5,0.5 };
     mat->roughness = 0.3;
     Sphere* ground = new Sphere(1000, { 0,-1000, -1 }, mat);
@@ -38,7 +41,7 @@ int main()
     {
         {
             Material* mat = new Material();
-                mat->type = "Lambertian";
+                mat->type = MaterialType::Lambertian;
                 float r = RandomFloat();
                 float g = RandomFloat();
                 float b = RandomFloat();
@@ -56,7 +59,7 @@ int main()
             rt.AddObject(ground);
         }{
             Material* mat = new Material();
-            mat->type = "Conductor";
+            mat->type = MaterialType::Conductor;
             float r = RandomFloat();
             float g = RandomFloat();
             float b = RandomFloat();
@@ -74,7 +77,7 @@ int main()
             rt.AddObject(ground);
         }{
             Material* mat = new Material();
-            mat->type = "Dielectric";
+            mat->type = MaterialType::Dielectric;
             float r = RandomFloat();
             float g = RandomFloat();
             float b = RandomFloat();
