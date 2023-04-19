@@ -50,8 +50,8 @@ Raytracer::~Raytracer()
 void Raytracer::RaytraceGroup(int pixelX, int pixelY, size_t pixelCount)
 {
     static uint32_t seed = 1337420 + 123321 * pixelX + 321123 * pixelY;
-    static float aspect = (float)(width / height);
     vec3 origin = get_position(view);
+    float aspect = (float)(width / height);
     int row = pixelY * width;
 
     float two_inv_width = 2.f / width;
@@ -68,7 +68,6 @@ void Raytracer::RaytraceGroup(int pixelX, int pixelY, size_t pixelCount)
             float v = ((float(pixelY + RandomFloat(++seed)) * two_inv_height) - 1.0f);
 
             vec3 direction = normalize(transform({ u, v, -1.0f }, frustum));
-
             color += TracePath(Ray(origin, direction));
         }
 

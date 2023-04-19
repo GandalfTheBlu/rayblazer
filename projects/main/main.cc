@@ -172,25 +172,14 @@ int main()
         oldy = fy;
     });
 
-    float rotx = 0;
-    float roty = 0;
-
-    // number of accumulated frames
-    int frameIndex = 0;
-
     // rendering loop
     while (wnd.IsOpen() && !exit)
     {
         resetFramebuffer = false;
         moveDir = {0,0,0};
-        //pitch = 0;
-        //yaw = 0;
 
         // poll input
         wnd.Update();
-
-        //rotx -= pitch;
-        //roty -= yaw;
 
         moveDir = normalize(moveDir);
 

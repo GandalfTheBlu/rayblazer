@@ -110,11 +110,11 @@ int main(int argc, char* argv[])
 	framebufferCopy.resize(width * height);
 
 	int maxBounces = 5;
-	int maxSpheres = 100;
+	int maxSpheres = 200;
 
 	Raytracer rt = Raytracer(width, height, framebuffer, framebufferCopy, raysPerPixel, maxBounces, maxSpheres);
 
-	MemoryPool<Material> materials(100);
+	MemoryPool<Material> materials(200);
 
 	uint32_t seed = 1337420;
 

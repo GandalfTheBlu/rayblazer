@@ -20,6 +20,7 @@ inline vec3 RandomPointInUnitCube(uint32_t seed)
 //------------------------------------------------------------------------------
 /**
 */
+
 void
 Material::BSDF(Ray& inOutRay, const vec3& point, const vec3& normal) const
 {
