@@ -162,7 +162,7 @@ Raytracer::Raycast(const Ray& ray, vec3& hitPoint, vec3& hitNormal, Material*& h
 void
 Raytracer::Clear()
 {
-    //frameIndex = 0;
+    frameIndex = 0;
     for (auto& color : this->frameBuffer)
     {
         color.r = 0.0f;
