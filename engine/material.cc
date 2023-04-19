@@ -3,15 +3,6 @@
 #include "mat4.h"
 #include "random.h"
 
-// returns a random point on the surface of a unit sphere
-//inline vec3 RandomPointOnUnitSphere()
-//{
-//    float x = RandomFloatNTP();
-//    float y = RandomFloatNTP();
-//    float z = RandomFloatNTP();
-//    return normalize({ x, y, z });
-//}
-
 inline vec3 RandomPointInUnitCube(uint32_t seed)
 {
     return { 0.5f - RandomFloat(++seed), 0.5f - RandomFloat(++seed), 0.5f - RandomFloat(++seed) };

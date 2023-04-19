@@ -49,7 +49,7 @@ Raytracer::~Raytracer()
 
 void Raytracer::RaytraceGroup(int pixelX, int pixelY, size_t pixelCount)
 {
-    static uint32_t seed = 1337420 + 123321 * pixelX + 321123 * pixelY;
+    static uint32_t seed = 1337420;
     vec3 origin = get_position(view);
     float aspect = (float)(width / height);
     int row = pixelY * width;
@@ -162,7 +162,7 @@ Raytracer::Raycast(const Ray& ray, vec3& hitPoint, vec3& hitNormal, Material*& h
 void
 Raytracer::Clear()
 {
-    frameIndex = 0;
+    //frameIndex = 0;
     for (auto& color : this->frameBuffer)
     {
         color.r = 0.0f;
