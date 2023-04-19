@@ -39,14 +39,24 @@ public:
     { 
         return {x * c, y * c, z * c};
     }
+    vec3 operator*(const vec3& rhs) const
+    {
+        return {x * rhs.x, y * rhs.y, z * rhs.z};
+    }
 
     float x, y, z;
 };
 
+inline float dot(vec3 a, vec3 b)
+{
+
+    return a.x * b.x + a.y * b.y + a.z * b.z;
+}
+
 // Get length of 3D vector
 inline float len(vec3 const& v)
 {
-    return std::sqrtf(v.x * v.x + v.y * v.y + v.z * v.z);
+    return std::sqrtf(dot(v, v));
 }
 
 // Get normalized version of v
@@ -57,23 +67,6 @@ inline vec3 normalize(const vec3& v)
         return v * (1.f / l);
 
     return v;
-}
-
-// piecewise multiplication between two vectors
-inline vec3 mul(vec3 a, vec3 b)
-{
-    return {a.x * b.x, a.y * b.y, a.z * b.z};
-}
-
-// piecewise add between two vectors
-inline vec3 add(vec3 a, vec3 b)
-{
-    return {a.x + b.x, a.y + b.y, a.z + b.z};
-}
-
-inline float dot(vec3 a, vec3 b)
-{
-    return a.x * b.x + a.y * b.y + a.z * b.z;
 }
 
 inline vec3 reflect(vec3 v, vec3 n)

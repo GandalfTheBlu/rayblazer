@@ -82,18 +82,6 @@ public:
 	}
 };
 
-float MyRandomFloat01()
-{
-	static uint32_t x = 1337420;
-	uint32_t max = -1;
-
-	x ^= x << 13;
-	x ^= x >> 17;
-	x ^= x << 5;
-
-	return (float)x / max;
-}
-
 int main(int argc, char* argv[])
 {
 	// verify arguments
@@ -122,38 +110,44 @@ int main(int argc, char* argv[])
 	framebufferCopy.resize(width * height);
 
 	int maxBounces = 5;
+	int maxSpheres = 100;
 
-	Raytracer rt = Raytracer(width, height, framebuffer, raysPerPixel, maxBounces);
+	Raytracer rt = Raytracer(width, height, framebuffer, framebufferCopy, raysPerPixel, maxBounces, maxSpheres);
+
+	MemoryPool<Material> materials(100);
+
+	uint32_t seed = 1337420;
 
 	{
-		Material* mat = new Material();
+		Material* mat = materials.GetNew();
 		mat->type = MaterialType::Lambertian;
 		mat->color = { 0.5,0.5,0.5 };
 		mat->roughness = 0.3;
-		Sphere* ground = new Sphere(1000, { 0,-1000, -1 }, mat);
-		rt.AddObject(ground);
+		Sphere* ground = rt.GetNewSphere();
+		*ground = Sphere(1000, {0,-1000,-1}, mat);
 	}
 
 	for (int i = 0; i < numberOfSpheres; i++)
 	{
-		Material* mat = new Material();
+		Material* mat = materials.GetNew();
 		mat->type = MaterialType::Lambertian;
-		float r = MyRandomFloat01();
-		float g = MyRandomFloat01();
-		float b = MyRandomFloat01();
+		float r = RandomFloat(++seed);
+		float g = RandomFloat(++seed);
+		float b = RandomFloat(++seed);
 		mat->color = { r,g,b };
-		mat->roughness = MyRandomFloat01();
+		mat->roughness = RandomFloat(++seed);
 		const float span = 10.0f;
-		Sphere* ground = new Sphere(
-			MyRandomFloat01() * 0.7f + 0.2f,
+		Sphere* sphere = rt.GetNewSphere();
+
+		*sphere = Sphere(
+			RandomFloat(++seed) * 0.7f + 0.2f,
 			{
-				(-1.f + 2.f * MyRandomFloat01()) * span,
-				MyRandomFloat01() * span + 0.2f,
-				(-1.f + 2.f * MyRandomFloat01())* span
+				RandomFloatNTP(++seed) * span,
+				RandomFloat(++seed) * span + 0.2f,
+				RandomFloatNTP(++seed) * span
 			},
 			mat
 		);
-		rt.AddObject(ground);
 	}
 	
 	vec3 camPos = { 0,1.0f,10.0f };
@@ -164,14 +158,13 @@ int main(int argc, char* argv[])
 	float oldy = 0;
 	float rotx = 0;
 	float roty = 0;
-	int frameIndex = 0;
 
 	std::cout << "starting performance test..." << std::endl;
 	Timer timer;
 	timer.Start();
 
 	// render "loop"
-	const int numberOfIterations = 300;
+	const int numberOfIterations = 1200;
 
 	for (int i = 0; i < numberOfIterations; i++)
 	{
@@ -190,20 +183,6 @@ int main(int argc, char* argv[])
 		rt.SetViewMatrix(cameraTransform);
 
 		rt.Raytrace();
-		frameIndex++;
-
-		// Get the average distribution of all samples
-		{
-			size_t p = 0;
-			for (Color const& pixel : framebuffer)
-			{
-				framebufferCopy[p] = pixel;
-				framebufferCopy[p].r /= frameIndex;
-				framebufferCopy[p].g /= frameIndex;
-				framebufferCopy[p].b /= frameIndex;
-				p++;
-			}
-		}
 	}
 
 	timer.Stop();

@@ -34,7 +34,7 @@ struct Material
     void BSDF(Ray& inOutRay, const vec3& point, const vec3& normal) const;
 
 private:
-    void BSDF_Lambertial(Ray& inOutRay, const vec3& point, const vec3& normal) const;
+    void BSDF_Lambertian(Ray& inOutRay, const vec3& point, const vec3& normal) const;
     void BSDF_Dielectric(Ray& inOutRay, const vec3& point, const vec3& normal) const;
     void BSDF_Conductor(Ray& inOutRay, const vec3& point, const vec3& normal) const;
 };

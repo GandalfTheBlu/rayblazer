@@ -8,7 +8,7 @@ SET(engine_files
 	vec3.h
 	color.h
 	mat4.h
-	object.h
+	hit_result.h
 	pbr.h
 	ray.h
 	raytracer.h
@@ -18,6 +18,9 @@ SET(engine_files
 	random.cc
 	material.h
 	material.cc
+	mempool.h
+	threadpool.h
+	threadpool.cpp
 )
 SOURCE_GROUP("engine" FILES ${engine_files})
 ADD_LIBRARY(engine STATIC ${engine_files})

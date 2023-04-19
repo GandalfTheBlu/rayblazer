@@ -1,29 +1,24 @@
 #pragma once
-#include "object.h"
+#include "hit_result.h"
 #include "mat4.h"
-#include "pbr.h"
 #include "random.h"
 #include "ray.h"
 #include "material.h"
 
-// returns a random point on the surface of a unit sphere
-inline vec3 RandomPointOnUnitSphere()
-{
-    float x = RandomFloatNTP();
-    float y = RandomFloatNTP();
-    float z = RandomFloatNTP();
-    return normalize({x, y, z});
-}
-
 // a spherical object
-class Sphere : public Object
+class Sphere
 {
 public:
     float radius;
     vec3 center;
-    Material const* const material;
+    Material* material;
 
-    Sphere(float radius, vec3 center, Material const* const material) : 
+    Sphere() : 
+        radius(0.f),
+        material(nullptr)
+    {}
+
+    Sphere(float radius, vec3 center, Material* material) : 
         radius(radius),
         center(center),
         material(material)
@@ -31,7 +26,7 @@ public:
 
     }
 
-    ~Sphere() override
+    ~Sphere()
     {
     
     }
@@ -41,10 +36,10 @@ public:
         return material->color;
     }
 
-    bool Intersect(const Ray& ray, float maxDist, HitResult& outHitInfo) override
+    bool Intersect(const Ray& ray, float maxDist, HitResult& outHitInfo)
     {
-        vec3 oc = ray.b - this->center;
-        vec3 dir = ray.m;
+        vec3 oc = ray.origin - this->center;
+        vec3 dir = ray.dir;
         float b = dot(oc, dir);
     
         // early out if sphere is "behind" ray
@@ -71,20 +66,16 @@ public:
                 return false;
 
             vec3 p = ray.PointAt(dist);
+            vec3 normal = (p - this->center) * (1.0f / this->radius);
+
             outHitInfo.p = p;
-            outHitInfo.normal = (p - this->center) * (1.0f / this->radius);
+            outHitInfo.normal = normal;
             outHitInfo.t = dist;
-            outHitInfo.object = this;
+            outHitInfo.material = this->material;
 
             return true;
         }
 
         return false;
     }
-
-    void ScatterRay(Ray& inOutRay, const vec3& point, const vec3& normal) override
-    {
-        this->material->BSDF(inOutRay, point, normal);
-    }
-
 };

@@ -1,18 +1,95 @@
 #include "raytracer.h"
 #include "random.h"
-#include <cassert>
+
+struct WorkArgs
+{
+    Raytracer* self;
+    int pixelX, pixelY, pixelCount;
+};
+
+void RenderThreadWork(const WorkArgs& args)
+{
+    args.self->RaytraceGroup(args.pixelX, args.pixelY, args.pixelCount);
+}
 
 //------------------------------------------------------------------------------
 /**
 */
-Raytracer::Raytracer(unsigned w, unsigned h, std::vector<Color>& frameBuffer, unsigned rpp, unsigned bounces) :
+Raytracer::Raytracer(unsigned w, unsigned h, std::vector<Color>& frameBuffer, std::vector<Color>& frameBufferCopy, unsigned rpp, unsigned bounces, int maxSpheres) :
     frameBuffer(frameBuffer),
+    frameBufferCopy(frameBufferCopy),
     rpp(rpp),
     bounces(bounces),
     width(w),
-    height(h)
+    height(h),
+    view(zero_mat()),
+    frustum(zero_mat()),
+    spheres(maxSpheres),
+    renderThreads(std::thread::hardware_concurrency())
 {
-    // empty
+    int x = 0;
+    int y = 0;
+    int pixelCount = width * height / renderThreads.size;
+    for (int i = 0; i < renderThreads.size; i++)
+    {
+        renderThreads.InitThread<WorkArgs>(RenderThreadWork, {this, x, y, pixelCount}, i);
+        x += pixelCount;
+        while (x >= width)
+        {
+            y++;
+            x -= width;
+        }
+    }
+}
+
+Raytracer::~Raytracer()
+{
+    
+}
+
+void Raytracer::RaytraceGroup(int pixelX, int pixelY, size_t pixelCount)
+{
+    static uint32_t seed = 1337420 + 123321 * pixelX + 321123 * pixelY;
+    static float aspect = (float)(width / height);
+    vec3 origin = get_position(view);
+    int row = pixelY * width;
+
+    float two_inv_width = 2.f / width;
+    float two_inv_height = 2.f / height;
+    float inv_frameIndex = 1.f / frameIndex;
+    float inv_rpp = 1.f / rpp;
+
+    for (size_t i = 0; i < pixelCount; i++)
+    {
+        Color color;
+        for (int i = 0; i < rpp; ++i)
+        {
+            float u = ((float(pixelX + RandomFloat(++seed)) * two_inv_width) - 1.0f) * aspect;
+            float v = ((float(pixelY + RandomFloat(++seed)) * two_inv_height) - 1.0f);
+
+            vec3 direction = normalize(transform({ u, v, -1.0f }, frustum));
+
+            color += TracePath(Ray(origin, direction));
+        }
+
+        // divide by number of samples per pixel, to get the average of the distribution
+        color *= inv_rpp;
+
+        int index = row + pixelX;
+        Color& res = frameBuffer[index];
+        res += color;
+        frameBufferCopy[index] = res * inv_frameIndex;
+
+        if (++pixelX >= width)
+        {
+            if (++pixelY >= height)
+            {
+                return;
+            }
+            pixelX = 0;
+            row = pixelY * width;
+        }
+    }
 }
 
 //------------------------------------------------------------------------------
@@ -21,60 +98,34 @@ Raytracer::Raytracer(unsigned w, unsigned h, std::vector<Color>& frameBuffer, un
 void
 Raytracer::Raytrace()
 {
-    static float aspect = (float)(this->width / this->height);
-
-    for (int y = 0; y < this->height; y++)
-    {
-        const int row = y * this->width;
-        for (int x = 0; x < this->width; x++)
-        {
-            Color color;
-            for (int i = 0; i < this->rpp; ++i)
-            {
-                float u = (((float(x + RandomFloat()) * (1.0f / this->width)) * 2.0f) - 1.0f) * aspect;
-                float v = (((float(y + RandomFloat()) * (1.0f / this->height)) * 2.0f) - 1.0f);
-
-                vec3 direction(u, v, -1.0f);
-                direction = transform(direction, this->frustum);
-                
-                Ray ray(get_position(this->view), direction);
-                color += this->TracePath(ray);
-            }
-
-            // divide by number of samples per pixel, to get the average of the distribution
-            color.r /= this->rpp;
-            color.g /= this->rpp;
-            color.b /= this->rpp;
-
-            this->frameBuffer[row + x] += color;
-        }
-    }
+    frameIndex++;
+    renderThreads.ExecuteAndWait();
 }
 
 //------------------------------------------------------------------------------
 /**
 */
-Color
+inline Color
 Raytracer::TracePath(const Ray& ray)
 {
     vec3 hitPoint;
     vec3 hitNormal;
-    Object* hitObject = nullptr;
+    Material* hitMaterial = nullptr;
     float distance = FLT_MAX;
     Ray updatedRay = ray;
     Color color = {1.f, 1.f, 1.f};
 
     for (int i = 0; i < bounces; i++)
     {
-        if (!Raycast(updatedRay, hitPoint, hitNormal, hitObject, distance))
+        if (!Raycast(updatedRay, hitPoint, hitNormal, hitMaterial, distance))
         {
-            color = color * Skybox(updatedRay.m);
+            color = color * Skybox(updatedRay.dir);
             break;
         }
 
-        color = color * hitObject->GetColor();
+        color = color * hitMaterial->color;
 
-        hitObject->ScatterRay(updatedRay, hitPoint, hitNormal);
+        hitMaterial->BSDF(updatedRay, hitPoint, hitNormal);
     }
 
     return color;
@@ -83,17 +134,15 @@ Raytracer::TracePath(const Ray& ray)
 //------------------------------------------------------------------------------
 /**
 */
-bool
-Raytracer::Raycast(const Ray& ray, vec3& hitPoint, vec3& hitNormal, Object*& hitObject, float& distance)
+inline bool
+Raytracer::Raycast(const Ray& ray, vec3& hitPoint, vec3& hitNormal, Material*& hitMaterial, float& distance)
 {
     bool isHit = false;
     HitResult closestHit;
 
-    for(int i=0; i<this->objects.size(); i++)
+    for(int i=0; i<this->spheres.Count(); i++)
     {
-        Object* object = this->objects[i];
-
-        if (object->Intersect(ray, closestHit.t, closestHit))
+        if (this->spheres[i]->Intersect(ray, closestHit.t, closestHit))
         {
             isHit = true;
         }
@@ -101,7 +150,7 @@ Raytracer::Raycast(const Ray& ray, vec3& hitPoint, vec3& hitNormal, Object*& hit
 
     hitPoint = closestHit.p;
     hitNormal = closestHit.normal;
-    hitObject = closestHit.object;
+    hitMaterial = closestHit.material;
     distance = closestHit.t;
     
     return isHit;
@@ -114,6 +163,7 @@ Raytracer::Raycast(const Ray& ray, vec3& hitPoint, vec3& hitNormal, Object*& hit
 void
 Raytracer::Clear()
 {
+    frameIndex = 0;
     for (auto& color : this->frameBuffer)
     {
         color.r = 0.0f;

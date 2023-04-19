@@ -13,6 +13,16 @@ struct mat4
     float m10, m11, m12, m13;
     float m20, m21, m22, m23;
     float m30, m31, m32, m33;
+
+    float& operator[](int i)
+    {
+        return *(&m00 + i);
+    }
+
+    float operator[](int i) const
+    {
+        return *(&m00 + i);
+    }
 };
 
 //------------------------------------------------------------------------------
@@ -51,6 +61,15 @@ get_position(const mat4& m)
     return { m.m30, m.m31, m.m32 };
 }
 
+inline mat4 zero_mat()
+{
+    mat4 m;
+    for (int i = 0; i < 16; i++)
+        m[i] = 0.f;
+
+    return m;
+}
+
 //------------------------------------------------------------------------------
 /**
     transform vector with matrix basis
@@ -60,20 +79,15 @@ transform(const vec3& v, const mat4& m)
 {
     //swizzle!
     //this should be easy to vectorize! ;)
+    //it didn't get any faster :(
     vec3 x = {v.x, v.x, v.x};
     vec3 y = {v.y, v.y, v.y};
     vec3 z = {v.z, v.z, v.z};
     vec3 r0 = { m.m00, m.m01, m.m02 };
     vec3 r1 = { m.m10, m.m11, m.m12 };
     vec3 r2 = { m.m20, m.m21, m.m22 };
-    // multiply
-    vec3 a = mul(x, r0);
-    vec3 b = mul(y, r1);
-    vec3 c = mul(z, r2);
-    // add
-    vec3 res = add(a,b);
-    res = add(res,c);
-    return res;
+
+    return x * r0 + y * r1 + z * r2;
 }
 
 //------------------------------------------------------------------------------
@@ -89,19 +103,7 @@ TBN(const vec3& normal)
     ret.m12 = normal.z;
     ret.m13 = 0.0f;
 
-    if (normal.z < -0.999805696f)
-    {
-        ret.m00 = 0.0f;
-        ret.m01 = -1.0f;
-        ret.m02 = 0.0f;
-        ret.m03 = 0.0f;
-
-        ret.m20 = -1.0f;
-        ret.m21 = 0.0f;
-        ret.m22 = 0.0f;
-        ret.m23 = 0.0f;
-    }
-    else
+    if (normal.z >= -0.999805696f)
     {
         float a = 1.0f / (1.0f + normal.z);
         float b = -normal.x * normal.y * a;
@@ -114,6 +116,18 @@ TBN(const vec3& normal)
         ret.m20 = b;
         ret.m21 = 1.0f - normal.y * normal.y * a;
         ret.m22 = normal.y;
+        ret.m23 = 0.0f;
+    }
+    else
+    {
+        ret.m00 = 0.0f;
+        ret.m01 = -1.0f;
+        ret.m02 = 0.0f;
+        ret.m03 = 0.0f;
+
+        ret.m20 = -1.0f;
+        ret.m21 = 0.0f;
+        ret.m22 = 0.0f;
         ret.m23 = 0.0f;
     }
 
@@ -221,8 +235,8 @@ inline mat4
 rotationx(float angle)
 {
     float radians = angle * MPI / 180.f;
-    float s = std::sin(radians);
-    float c = std::sqrtf(1.f - s * s);
+    float s = std::sinf(radians);
+    float c = std::cosf(radians);
 
 	return { 1,  0,  0,  0,
              0,  c, -s,  0,
@@ -237,8 +251,8 @@ inline mat4
 rotationy(float angle)
 {
     float radians = angle * MPI / 180.f;
-	float s = std::sin(radians);
-	float c = std::sqrtf(1.f - s*s);
+	float s = std::sinf(radians);
+	float c = std::cosf(radians);
 
 	return {  c, 0, s, 0,
 			  0, 1, 0, 0,

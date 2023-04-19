@@ -13,17 +13,34 @@ struct Color
         this->b += rhs.b;
     }
 
-    Color operator+(Color const& rhs)
+    Color operator+(Color const& rhs) const
     {
         return {this->r + rhs.r,
                 this->g + rhs.g,
                 this->b + rhs.b};
     }
 
-    Color operator*(Color const& rhs)
+    Color operator*(Color const& rhs) const
     {
         return {this->r * rhs.r,
                 this->g * rhs.g,
                 this->b * rhs.b};
+    }
+
+    Color operator*(float rhs) const
+    {
+        return {
+            r * rhs,
+            g * rhs,
+            b * rhs
+        };
+    }
+
+    Color& operator*=(float rhs)
+    {
+        r *= rhs;
+        g *= rhs;
+        b *= rhs;
+        return *this;
     }
 };

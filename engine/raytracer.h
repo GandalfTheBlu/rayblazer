@@ -4,8 +4,10 @@
 #include "mat4.h"
 #include "color.h"
 #include "ray.h"
-#include "object.h"
 #include <float.h>
+#include "mempool.h"
+#include "sphere.h"
+#include "threadpool.h"
 
 //------------------------------------------------------------------------------
 /**
@@ -13,17 +15,22 @@
 class Raytracer
 {
 public:
-    Raytracer(unsigned w, unsigned h, std::vector<Color>& frameBuffer, unsigned rpp, unsigned bounces);
-    ~Raytracer() { }
+    Raytracer(unsigned w, unsigned h, std::vector<Color>& frameBuffer, std::vector<Color>& frameBufferCopy, unsigned rpp, unsigned bounces, int maxSpheres);
+
+    ~Raytracer();
 
     // start raytracing!
     void Raytrace();
 
+    void RaytraceGroup(int pixelX, int pixelY, size_t pixelCount);
+
     // add object to scene
-    void AddObject(Object* obj);
+    //void AddObject(Object* obj);
+
+    Sphere* GetNewSphere();
 
     // single raycast, find object
-    bool Raycast(const Ray& ray, vec3& hitPoint, vec3& hitNormal, Object*& hitObject, float& distance);
+    bool Raycast(const Ray& ray, vec3& hitPoint, vec3& hitNormal, Material*& hitMaterial, float& distance);
 
     // set camera matrix
     void SetViewMatrix(const mat4& val);
@@ -41,6 +48,8 @@ public:
     Color Skybox(vec3 direction);
 
     std::vector<Color>& frameBuffer;
+    std::vector<Color>& frameBufferCopy;
+    int frameIndex = 0;
     
     // rays per pixel
     unsigned rpp;
@@ -51,24 +60,20 @@ public:
     const unsigned width;
     // height of framebuffer
     const unsigned height;
-    
-    const vec3 lowerLeftCorner = { -2.0, -1.0, -1.0 };
-    const vec3 horizontal = { 4.0, 0.0, 0.0 };
-    const vec3 vertical = { 0.0, 2.0, 0.0 };
-    const vec3 origin = { 0.0, 2.0, 10.0f };
 
     // view matrix
     mat4 view;
     // Go from canonical to view frustum
     mat4 frustum;
 
-private:
-    std::vector<Object*> objects;
+    MemoryPool<Sphere> spheres;
+    ThreadPool renderThreads;
 };
 
-inline void Raytracer::AddObject(Object* o)
+
+inline Sphere* Raytracer::GetNewSphere()
 {
-    this->objects.push_back(o);
+    return this->spheres.GetNew();
 }
 
 inline void Raytracer::SetViewMatrix(const mat4& val)

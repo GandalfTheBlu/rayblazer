@@ -1,53 +1,21 @@
 #include "random.h"
 
-//------------------------------------------------------------------------------
-/**
-	XorShift128 implementation.
-*/
-unsigned
-FastRandom()
+float RandomFloat(uint32_t x)
 {
-	// These are predefined to give us the largest
-	// possible sequence of random numbers
-    static unsigned x = 123456789;
-    static unsigned y = 362436069;
-    static unsigned z = 521288629;
-    static unsigned w = 88675123;
-    unsigned t;
-    t = x ^ (x << 11);
-    x = y;
-	y = z;
-	z = w;
-    return w = w ^ (w >> 19) ^ (t ^ (t >> 8));
+    constexpr uint32_t max = -1;
+
+    x += 123987 * x;
+    x |= (x << 11);
+    x ^= x << 13;
+    x |= (x >> 11);
+    x ^= x >> 17;
+    x |= (x << 3);
+    x ^= x << 5;
+
+    return (float)x / max;
 }
 
-//------------------------------------------------------------------------------
-/**
-    Thanks to Nic Werneck (https://xor0110.wordpress.com/2010/09/24/how-to-generate-floating-point-random-numbers-efficiently/)
-*/
-float
-RandomFloat()
+float RandomFloatNTP(uint32_t x)
 {
-    static union
-    {
-        unsigned int i;
-        float f;
-    } r;
-    r.i = FastRandom() & 0x007fffff | 0x3f800000;
-    return r.f - 1.0f;
-}
-
-//------------------------------------------------------------------------------
-/**
-*/
-float
-RandomFloatNTP()
-{
-    static union
-    {
-        unsigned int i;
-        float f;
-    } r;
-    r.i = FastRandom() & 0x007fffff | 0x40000000;
-    return r.f - 3.0f;
+    return RandomFloat(x) * 2.f - 1.f;
 }

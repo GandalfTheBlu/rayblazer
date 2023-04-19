@@ -2,7 +2,6 @@
 #include "window.h"
 #include "vec3.h"
 #include "raytracer.h"
-#include "sphere.h"
 
 #define degtorad(angle) angle * MPI / 180
 
@@ -17,83 +16,90 @@ int main()
 
     std::vector<Color> framebuffer;
 
-    const unsigned w = 200;
-    const unsigned h = 100;
+    const unsigned w = 1280;
+    const unsigned h = 720;
     framebuffer.resize(w * h);
 
-    int pixelsSize = 10;
+    std::vector<Color> framebufferCopy;
+    framebufferCopy.resize(w * h);
+
+    int pixelsSize = 1;
     wnd.SetSize(w*pixelsSize, h*pixelsSize);
     
     int raysPerPixel = 1;
     int maxBounces = 5;
+    int maxSpheres = 100;
 
-    Raytracer rt = Raytracer(w, h, framebuffer, raysPerPixel, maxBounces);
+    Raytracer rt = Raytracer(w, h, framebuffer, framebufferCopy, raysPerPixel, maxBounces, maxSpheres);
+    MemoryPool<Material> materials(100);
 
     // Create some objects
-    Material* mat = new Material();
+    Material* mat = materials.GetNew();
     mat->type = MaterialType::Lambertian;
     mat->color = { 0.5,0.5,0.5 };
     mat->roughness = 0.3;
-    Sphere* ground = new Sphere(1000, { 0,-1000, -1 }, mat);
-    rt.AddObject(ground);
+    Sphere* ground = rt.GetNewSphere();
+    *ground = Sphere(1000, { 0,-1000, -1 }, mat);
+
+    uint32_t seed = 1337420;
 
     for (int it = 0; it < 12; it++)
     {
         {
-            Material* mat = new Material();
+            Material* mat = materials.GetNew();
                 mat->type = MaterialType::Lambertian;
-                float r = RandomFloat();
-                float g = RandomFloat();
-                float b = RandomFloat();
+                float r = RandomFloat(++seed);
+                float g = RandomFloat(++seed);
+                float b = RandomFloat(++seed);
                 mat->color = { r,g,b };
-                mat->roughness = RandomFloat();
+                mat->roughness = RandomFloat(++seed);
                 const float span = 10.0f;
-                Sphere* ground = new Sphere(
-                    RandomFloat() * 0.7f + 0.2f,
+                Sphere* sphere = rt.GetNewSphere();
+                *sphere = Sphere(
+                    RandomFloat(++seed) * 0.7f + 0.2f,
                     {
-                        RandomFloatNTP() * span,
-                        RandomFloat() * span + 0.2f,
-                        RandomFloatNTP() * span
+                        RandomFloatNTP(++seed) * span,
+                        RandomFloat(++seed) * span + 0.2f,
+                        RandomFloatNTP(++seed) * span
                     },
                     mat);
-            rt.AddObject(ground);
         }{
-            Material* mat = new Material();
+            Material* mat = materials.GetNew();
             mat->type = MaterialType::Conductor;
-            float r = RandomFloat();
-            float g = RandomFloat();
-            float b = RandomFloat();
+            float r = RandomFloat(++seed);
+            float g = RandomFloat(++seed);
+            float b = RandomFloat(++seed);
             mat->color = { r,g,b };
-            mat->roughness = RandomFloat();
+            mat->roughness = RandomFloat(++seed);
             const float span = 30.0f;
-            Sphere* ground = new Sphere(
-                RandomFloat() * 0.7f + 0.2f,
+            Sphere* sphere = rt.GetNewSphere();
+            *sphere = Sphere(
+                RandomFloat(++seed) * 0.7f + 0.2f,
                 {
-                    RandomFloatNTP() * span,
-                    RandomFloat() * span + 0.2f,
-                    RandomFloatNTP() * span
+                    RandomFloatNTP(++seed) * span,
+                    RandomFloat(++seed) * span + 0.2f,
+                    RandomFloatNTP(++seed) * span
                 },
                 mat);
-            rt.AddObject(ground);
         }{
-            Material* mat = new Material();
+            Material* mat = materials.GetNew();
             mat->type = MaterialType::Dielectric;
-            float r = RandomFloat();
-            float g = RandomFloat();
-            float b = RandomFloat();
+            float r = RandomFloat(++seed);
+            float g = RandomFloat(++seed);
+            float b = RandomFloat(++seed);
             mat->color = { r,g,b };
-            mat->roughness = RandomFloat();
+            mat->roughness = RandomFloat(++seed);
             mat->refractionIndex = 1.65;
             const float span = 25.0f;
-            Sphere* ground = new Sphere(
-                RandomFloat() * 0.7f + 0.2f,
+            Sphere* sphere = rt.GetNewSphere();
+            *sphere = Sphere(
+                RandomFloat(++seed) * 0.7f + 0.2f,
                 {
-                    RandomFloatNTP() * span,
-                    RandomFloat() * span + 0.2f,
-                    RandomFloatNTP() * span
+                    RandomFloatNTP(++seed) * span,
+                    RandomFloat(++seed) * span + 0.2f,
+                    RandomFloatNTP(++seed) * span
                 },
                 mat);
-            rt.AddObject(ground);
         }
     }
     
@@ -113,27 +119,27 @@ int main()
             break;
         case GLFW_KEY_W:
             moveDir.z -= 1.0f;
-            resetFramebuffer |= true;
+            resetFramebuffer = true;
             break;
         case GLFW_KEY_S:
             moveDir.z += 1.0f;
-            resetFramebuffer |= true;
+            resetFramebuffer = true;
             break;
         case GLFW_KEY_A:
             moveDir.x -= 1.0f;
-            resetFramebuffer |= true;
+            resetFramebuffer = true;
             break;
         case GLFW_KEY_D:
             moveDir.x += 1.0f;
-            resetFramebuffer |= true;
+            resetFramebuffer = true;
             break;
-        case GLFW_KEY_SPACE:
+        case GLFW_KEY_Q:
             moveDir.y += 1.0f;
-            resetFramebuffer |= true;
+            resetFramebuffer = true;
             break;
-        case GLFW_KEY_LEFT_CONTROL:
+        case GLFW_KEY_E:
             moveDir.y -= 1.0f;
-            resetFramebuffer |= true;
+            resetFramebuffer = true;
             break;
         default:
             break;
@@ -144,16 +150,26 @@ int main()
     float yaw = 0;
     float oldx = 0;
     float oldy = 0;
+    bool firstUpdate = true;
 
-    wnd.SetMouseMoveFunction([&pitch, &yaw, &oldx, &oldy, &resetFramebuffer](double x, double y)
+    wnd.SetMouseMoveFunction([&firstUpdate, &pitch, &yaw, &oldx, &oldy, &resetFramebuffer](double x, double y)
     {
-        x *= -0.1;
-        y *= -0.1;
-        yaw = x - oldx;
-        pitch = y - oldy;
-        resetFramebuffer |= true;
-        oldx = x;
-        oldy = y;
+        float fx = (float)x;
+        float fy = (float)y;
+
+        if (firstUpdate)
+        {
+            firstUpdate = false;
+        }
+        else
+        {
+            yaw += 0.1 * (fx - oldx);
+            pitch += 0.1 * (fy - oldy);
+            resetFramebuffer = true;
+        }
+        
+        oldx = fx;
+        oldy = fy;
     });
 
     float rotx = 0;
@@ -162,27 +178,24 @@ int main()
     // number of accumulated frames
     int frameIndex = 0;
 
-    std::vector<Color> framebufferCopy;
-    framebufferCopy.resize(w * h);
-
     // rendering loop
     while (wnd.IsOpen() && !exit)
     {
         resetFramebuffer = false;
         moveDir = {0,0,0};
-        pitch = 0;
-        yaw = 0;
+        //pitch = 0;
+        //yaw = 0;
 
         // poll input
         wnd.Update();
 
-        rotx -= pitch;
-        roty -= yaw;
+        //rotx -= pitch;
+        //roty -= yaw;
 
         moveDir = normalize(moveDir);
 
-        mat4 xMat = (rotationx(rotx));
-        mat4 yMat = (rotationy(roty));
+        mat4 xMat = (rotationx(pitch));
+        mat4 yMat = (rotationy(yaw));
         mat4 cameraTransform = multiply(yMat, xMat);
 
         camPos = camPos + transform(moveDir * 0.2f, cameraTransform);
@@ -196,24 +209,9 @@ int main()
         if (resetFramebuffer)
         {
             rt.Clear();
-            frameIndex = 0;
         }
 
         rt.Raytrace();
-        frameIndex++;
-
-        // Get the average distribution of all samples
-        {
-            size_t p = 0;
-            for (Color const& pixel : framebuffer)
-            {
-                framebufferCopy[p] = pixel;
-                framebufferCopy[p].r /= frameIndex;
-                framebufferCopy[p].g /= frameIndex;
-                framebufferCopy[p].b /= frameIndex;
-                p++;
-            }
-        }
 
         glClearColor(0, 0, 0, 1.0);
         glClear( GL_COLOR_BUFFER_BIT );
