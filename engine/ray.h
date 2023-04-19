@@ -1,4 +1,5 @@
 #pragma once
+#include "settings.h"
 #include "vec3.h"
 #include <atomic>
 
@@ -17,7 +18,9 @@ public:
         origin(startpoint),
         dir(dir)
     {
+#ifdef RAYCOUNT
         spawnedCount++;
+#endif
     }
 
     ~Ray()

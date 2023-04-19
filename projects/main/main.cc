@@ -37,7 +37,7 @@ int main()
     Material* mat = materials.GetNew();
     mat->type = MaterialType::Lambertian;
     mat->color = { 0.5,0.5,0.5 };
-    mat->roughness = 0.3;
+    mat->roughness = 0.3f;
     Sphere* ground = rt.GetNewSphere();
     *ground = Sphere(1000, { 0,-1000, -1 }, mat);
 
@@ -89,7 +89,7 @@ int main()
             float b = RandomFloat(++seed);
             mat->color = { r,g,b };
             mat->roughness = RandomFloat(++seed);
-            mat->refractionIndex = 1.65;
+            mat->refractionIndex = 1.65f;
             const float span = 25.0f;
             Sphere* sphere = rt.GetNewSphere();
             *sphere = Sphere(
@@ -163,8 +163,8 @@ int main()
         }
         else
         {
-            yaw += 0.1 * (fx - oldx);
-            pitch += 0.1 * (fy - oldy);
+            yaw += 0.1f * (fx - oldx);
+            pitch += 0.1f * (fy - oldy);
             resetFramebuffer = true;
         }
         

@@ -21,6 +21,7 @@ SET(engine_files
 	mempool.h
 	threadpool.h
 	threadpool.cpp
+	settings.h
 )
 SOURCE_GROUP("engine" FILES ${engine_files})
 ADD_LIBRARY(engine STATIC ${engine_files})

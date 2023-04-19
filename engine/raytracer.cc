@@ -4,7 +4,8 @@
 struct WorkArgs
 {
     Raytracer* self;
-    int pixelX, pixelY, pixelCount;
+    int pixelX, pixelY;
+    size_t pixelCount;
 };
 
 void RenderThreadWork(const WorkArgs& args)
@@ -15,7 +16,7 @@ void RenderThreadWork(const WorkArgs& args)
 //------------------------------------------------------------------------------
 /**
 */
-Raytracer::Raytracer(unsigned w, unsigned h, std::vector<Color>& frameBuffer, std::vector<Color>& frameBufferCopy, unsigned rpp, unsigned bounces, int maxSpheres) :
+Raytracer::Raytracer(size_t w, size_t h, std::vector<Color>& frameBuffer, std::vector<Color>& frameBufferCopy, size_t rpp, size_t bounces, int maxSpheres) :
     frameBuffer(frameBuffer),
     frameBufferCopy(frameBufferCopy),
     rpp(rpp),
@@ -29,7 +30,7 @@ Raytracer::Raytracer(unsigned w, unsigned h, std::vector<Color>& frameBuffer, st
 {
     int x = 0;
     int y = 0;
-    int pixelCount = width * height / renderThreads.size;
+    size_t pixelCount = width * height / renderThreads.size;
     for (int i = 0; i < renderThreads.size; i++)
     {
         renderThreads.InitThread<WorkArgs>(RenderThreadWork, {this, x, y, pixelCount}, i);
@@ -49,9 +50,11 @@ Raytracer::~Raytracer()
 
 void Raytracer::RaytraceGroup(int pixelX, int pixelY, size_t pixelCount)
 {
-    static uint32_t seed = 1337420;
+    // just some random stuff that changes over time
+    uint32_t seed = 1337420 + (pixelX | frameIndex ^ 45312) * 1234 + (pixelY | frameIndex ^ 31235) * 4321;
+
     vec3 origin = get_position(view);
-    float aspect = (float)(width / height);
+    float aspect = (float)width / height;
     int row = pixelY * width;
 
     float two_inv_width = 2.f / width;
@@ -68,7 +71,7 @@ void Raytracer::RaytraceGroup(int pixelX, int pixelY, size_t pixelCount)
             float v = ((float(pixelY + RandomFloat(++seed)) * two_inv_height) - 1.0f);
 
             vec3 direction = normalize(transform({ u, v, -1.0f }, frustum));
-            color += TracePath(Ray(origin, direction));
+            color += TracePath(Ray(origin, direction), seed);
         }
 
         // divide by number of samples per pixel, to get the average of the distribution
@@ -105,7 +108,7 @@ Raytracer::Raytrace()
 /**
 */
 inline Color
-Raytracer::TracePath(const Ray& ray)
+Raytracer::TracePath(const Ray& ray, uint32_t seed)
 {
     vec3 hitPoint;
     vec3 hitNormal;
@@ -124,7 +127,7 @@ Raytracer::TracePath(const Ray& ray)
 
         color = color * hitMaterial->color;
 
-        hitMaterial->BSDF(updatedRay, hitPoint, hitNormal);
+        hitMaterial->BSDF(updatedRay, hitPoint, hitNormal, ++seed);
     }
 
     return color;

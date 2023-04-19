@@ -234,7 +234,7 @@ multiply(const mat4& b, const mat4& a)
 inline mat4
 rotationx(float angle)
 {
-    float radians = angle * MPI / 180.f;
+    float radians = angle * 3.141592f / 180.f;
     float s = std::sinf(radians);
     float c = std::cosf(radians);
 
@@ -250,7 +250,7 @@ rotationx(float angle)
 inline mat4
 rotationy(float angle)
 {
-    float radians = angle * MPI / 180.f;
+    float radians = angle * 3.141592f / 180.f;
 	float s = std::sinf(radians);
 	float c = std::cosf(radians);
 

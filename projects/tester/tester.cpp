@@ -3,9 +3,7 @@
 #include <chrono>
 #define STB_IMAGE_WRITE_IMPLEMENTATION
 #include "stb_image_write.h"
-#include "vec3.h"
 #include "raytracer.h"
-#include "sphere.h"
 
 bool IsDigit(char c)
 {
@@ -27,10 +25,10 @@ float Clamp01(float v)
 	return (v < 0.f ? 0.f : (v > 1.f ? 1.f : v));
 }
 
-void SaveDataToPNG(const char* filename, int width, int height, float* colorData)
+void SaveDataToPNG(const char* filename, size_t width, size_t height, float* colorData)
 {
-	int numberOfChannels = 3;// rgb
-	char* imageData = new char[(size_t)width * height * numberOfChannels];
+	size_t numberOfChannels = 3;// rgb
+	char* imageData = new char[width * height * numberOfChannels];
 
 	// read colorData and map to char values in range 0-255
 	// the colorData starts in the bottom left corner and is in column major order but
@@ -40,7 +38,7 @@ void SaveDataToPNG(const char* filename, int width, int height, float* colorData
 	{
 		for (int x = 0; x < width; x++)
 		{
-			int colorIndex = (y * width + x) * numberOfChannels;
+			size_t colorIndex = (y * width + x) * numberOfChannels;
 			float r = Clamp01(colorData[colorIndex]);
 			float g = Clamp01(colorData[colorIndex + 1]);
 			float b = Clamp01(colorData[colorIndex + 2]);
@@ -75,9 +73,9 @@ public:
 		endTime = std::chrono::high_resolution_clock::now();
 	}
 
-	double GetMillisecondDuration()
+	float GetMillisecondDuration()
 	{
-		std::chrono::duration<double, std::milli> duration = endTime - startTime;
+		std::chrono::duration<float, std::milli> duration = endTime - startTime;
 		return duration.count();
 	}
 };
@@ -121,8 +119,8 @@ int main(int argc, char* argv[])
 	{
 		Material* mat = materials.GetNew();
 		mat->type = MaterialType::Lambertian;
-		mat->color = { 0.5,0.5,0.5 };
-		mat->roughness = 0.3;
+		mat->color = { 0.5f,0.5f,0.5f };
+		mat->roughness = 0.3f;
 		Sphere* ground = rt.GetNewSphere();
 		*ground = Sphere(1000, {0,-1000,-1}, mat);
 	}

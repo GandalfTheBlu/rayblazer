@@ -26,15 +26,15 @@ struct Material
     float roughness = 0.75;
 
     // this is only needed for dielectric materials.
-    float refractionIndex = 1.44;
+    float refractionIndex = 1.44f;
 
     /**
         Scatter ray against material
     */
-    void BSDF(Ray& inOutRay, const vec3& point, const vec3& normal) const;
+    void BSDF(Ray& inOutRay, const vec3& point, const vec3& normal, uint32_t seed) const;
 
 private:
-    void BSDF_Lambertian(Ray& inOutRay, const vec3& point, const vec3& normal) const;
-    void BSDF_Dielectric(Ray& inOutRay, const vec3& point, const vec3& normal) const;
-    void BSDF_Conductor(Ray& inOutRay, const vec3& point, const vec3& normal) const;
+    void BSDF_Lambertian(Ray& inOutRay, const vec3& point, const vec3& normal, uint32_t seed) const;
+    void BSDF_Dielectric(Ray& inOutRay, const vec3& point, const vec3& normal, uint32_t seed) const;
+    void BSDF_Conductor(Ray& inOutRay, const vec3& point, const vec3& normal, uint32_t seed) const;
 };

@@ -13,25 +13,24 @@ inline vec3 RandomPointInUnitCube(uint32_t seed)
 */
 
 void
-Material::BSDF(Ray& inOutRay, const vec3& point, const vec3& normal) const
+Material::BSDF(Ray& inOutRay, const vec3& point, const vec3& normal, uint32_t seed) const
 {
     switch (type)
     {
     case MaterialType::Lambertian:
-        BSDF_Lambertian(inOutRay, point, normal);
+        BSDF_Lambertian(inOutRay, point, normal, seed);
         break;
     case MaterialType::Dielectric:
-        BSDF_Dielectric(inOutRay, point, normal);
+        BSDF_Dielectric(inOutRay, point, normal, seed);
         break;
     case MaterialType::Conductor:
-        BSDF_Conductor(inOutRay, point, normal);
+        BSDF_Conductor(inOutRay, point, normal, seed);
         break;
     }
 }
 
-void Material::BSDF_Lambertian(Ray& inOutRay, const vec3& point, const vec3& normal) const
+void Material::BSDF_Lambertian(Ray& inOutRay, const vec3& point, const vec3& normal, uint32_t seed) const
 {
-    static uint32_t seed = 1337420;
     float cosTheta = -dot(inOutRay.dir, normal);
 
     // probability that a ray will reflect on a microfacet
@@ -49,9 +48,8 @@ void Material::BSDF_Lambertian(Ray& inOutRay, const vec3& point, const vec3& nor
         inOutRay = {point, normalize(normal + RandomPointInUnitCube(++seed)) };
     }
 }
-void Material::BSDF_Dielectric(Ray& inOutRay, const vec3& point, const vec3& normal) const
+void Material::BSDF_Dielectric(Ray& inOutRay, const vec3& point, const vec3& normal, uint32_t seed) const
 {
-    static uint32_t seed = 1337420;
     float cosTheta = -dot(inOutRay.dir, normal);
 
     // probability that a ray will reflect on a microfacet
@@ -71,9 +69,8 @@ void Material::BSDF_Dielectric(Ray& inOutRay, const vec3& point, const vec3& nor
         inOutRay = { point, normalize(normal + RandomPointInUnitCube(++seed)) };
     }
 }
-void Material::BSDF_Conductor(Ray& inOutRay, const vec3& point, const vec3& normal) const
+void Material::BSDF_Conductor(Ray& inOutRay, const vec3& point, const vec3& normal, uint32_t seed) const
 {
-    static uint32_t seed = 1337420;
     float cosTheta = -dot(inOutRay.dir, normal);
 
     vec3 outwardNormal;

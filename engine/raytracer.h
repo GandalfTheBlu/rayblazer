@@ -15,7 +15,7 @@
 class Raytracer
 {
 public:
-    Raytracer(unsigned w, unsigned h, std::vector<Color>& frameBuffer, std::vector<Color>& frameBufferCopy, unsigned rpp, unsigned bounces, int maxSpheres);
+    Raytracer(size_t w, size_t h, std::vector<Color>& frameBuffer, std::vector<Color>& frameBufferCopy, size_t rpp, size_t bounces, int maxSpheres);
 
     ~Raytracer();
 
@@ -42,7 +42,7 @@ public:
     void UpdateMatrices();
 
     // trace a path and return intersection color
-    Color TracePath(const Ray& ray);
+    Color TracePath(const Ray& ray, uint32_t seed);
 
     // get the color of the skybox in a direction
     Color Skybox(vec3 direction);
