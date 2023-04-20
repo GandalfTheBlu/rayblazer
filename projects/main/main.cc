@@ -16,8 +16,8 @@ int main()
 
     std::vector<Color> framebuffer;
 
-    const unsigned w = 1280;
-    const unsigned h = 720;
+    const unsigned w = 1000;
+    const unsigned h = 500;
     framebuffer.resize(w * h);
 
     std::vector<Color> framebufferCopy;
@@ -28,80 +28,52 @@ int main()
     
     int raysPerPixel = 1;
     int maxBounces = 5;
-    int maxSpheres = 100;
+    int maxSpheres = 500;
 
     Raytracer rt = Raytracer(w, h, framebuffer, framebufferCopy, raysPerPixel, maxBounces, maxSpheres);
-    MemoryPool<Material> materials(100);
-
-    // Create some objects
-    Material* mat = materials.GetNew();
-    mat->type = MaterialType::Lambertian;
-    mat->color = { 0.5,0.5,0.5 };
-    mat->roughness = 0.3f;
-    Sphere* ground = rt.GetNewSphere();
-    *ground = Sphere(1000, { 0,-1000, -1 }, mat);
+    MemoryPool<Material> materials(maxSpheres);
 
     uint32_t seed = 1337420;
 
-    for (int it = 0; it < 12; it++)
+    // Create some objects
+    int matType = 0;
+    for (int i = 0; i < maxSpheres; i++)
     {
+        Material* mat = materials.GetNew();
+        switch (matType++)
         {
-            Material* mat = materials.GetNew();
-                mat->type = MaterialType::Lambertian;
-                float r = RandomFloat(++seed);
-                float g = RandomFloat(++seed);
-                float b = RandomFloat(++seed);
-                mat->color = { r,g,b };
-                mat->roughness = RandomFloat(++seed);
-                const float span = 10.0f;
-                Sphere* sphere = rt.GetNewSphere();
-                *sphere = Sphere(
-                    RandomFloat(++seed) * 0.7f + 0.2f,
-                    {
-                        RandomFloatNTP(++seed) * span,
-                        RandomFloat(++seed) * span + 0.2f,
-                        RandomFloatNTP(++seed) * span
-                    },
-                    mat);
-        }{
-            Material* mat = materials.GetNew();
+        case 0:
+            mat->type = MaterialType::Lambertian;
+            break;
+        case 1:
             mat->type = MaterialType::Conductor;
-            float r = RandomFloat(++seed);
-            float g = RandomFloat(++seed);
-            float b = RandomFloat(++seed);
-            mat->color = { r,g,b };
-            mat->roughness = RandomFloat(++seed);
-            const float span = 30.0f;
-            Sphere* sphere = rt.GetNewSphere();
-            *sphere = Sphere(
-                RandomFloat(++seed) * 0.7f + 0.2f,
-                {
-                    RandomFloatNTP(++seed) * span,
-                    RandomFloat(++seed) * span + 0.2f,
-                    RandomFloatNTP(++seed) * span
-                },
-                mat);
-        }{
-            Material* mat = materials.GetNew();
+            break;
+        case 2:
             mat->type = MaterialType::Dielectric;
-            float r = RandomFloat(++seed);
-            float g = RandomFloat(++seed);
-            float b = RandomFloat(++seed);
-            mat->color = { r,g,b };
-            mat->roughness = RandomFloat(++seed);
-            mat->refractionIndex = 1.65f;
-            const float span = 25.0f;
-            Sphere* sphere = rt.GetNewSphere();
-            *sphere = Sphere(
-                RandomFloat(++seed) * 0.7f + 0.2f,
-                {
-                    RandomFloatNTP(++seed) * span,
-                    RandomFloat(++seed) * span + 0.2f,
-                    RandomFloatNTP(++seed) * span
-                },
-                mat);
+            matType = 0;
+            break;
         }
+        float r = RandomFloat(++seed);
+        float g = RandomFloat(++seed);
+        float b = RandomFloat(++seed);
+        mat->color = { r,g,b };
+        mat->roughness = RandomFloat(++seed);
+
+        const vec3 minPos(-50.f, 0.f, -100.f);
+        const vec3 maxPos(50, 50, 20);
+        const vec3 span = maxPos - minPos;
+
+        float radius = RandomFloat(++seed) * 1.5f + 0.5f;
+        vec3 pos(
+            minPos.x + span.x * RandomFloat(++seed),
+            minPos.y + span.y * RandomFloat(++seed),
+            minPos.z + span.z * RandomFloat(++seed)
+        );
+
+        *rt.GetNewSphere() = Sphere(radius, pos, mat);
     }
+
+    rt.CreateBoundingSpheres();
     
     bool exit = false;
 

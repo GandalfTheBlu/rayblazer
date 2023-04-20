@@ -34,9 +34,9 @@ void SaveDataToPNG(const char* filename, size_t width, size_t height, float* col
 	// the colorData starts in the bottom left corner and is in column major order but
 	// the imageData needs to start in the top left corner and be in row major order
 	int index = 0;
-	for (int y = height - 1; y >= 0; y--)
+	for (int y = int(height) - 1; y >= 0; y--)
 	{
-		for (int x = 0; x < width; x++)
+		for (int x = 0; x < int(width); x++)
 		{
 			size_t colorIndex = (y * width + x) * numberOfChannels;
 			float r = Clamp01(colorData[colorIndex]);
@@ -49,7 +49,7 @@ void SaveDataToPNG(const char* filename, size_t width, size_t height, float* col
 		}
 	}
 
-	stbi_write_png(filename, width, height, numberOfChannels, imageData, width * numberOfChannels);
+	stbi_write_png(filename, int(width), int(height), int(numberOfChannels), imageData, int(width * numberOfChannels));
 
 	delete[] imageData;
 }
@@ -87,9 +87,10 @@ int main(int argc, char* argv[])
 		!IsUnsignedInt(argv[1]) || 
 		!IsUnsignedInt(argv[2]) ||
 		!IsUnsignedInt(argv[3]) ||
-		!IsUnsignedInt(argv[4]))
+		!IsUnsignedInt(argv[4]) ||
+		!IsUnsignedInt(argv[5]))
 	{
-		std::cout << "incorrect arguments, arguments are: width, height, raysPerPixel, numberOfSpheres, imageFile(optional)" << std::endl;
+		std::cout << "incorrect arguments, arguments are: width, height, raysPerPixel, numberOfSpheres, maxBounces, imageFile(optional)" << std::endl;
 		return 1;
 	}
 
@@ -98,7 +99,8 @@ int main(int argc, char* argv[])
 	size_t height = (size_t)std::stoi(argv[2]);
 	int raysPerPixel = std::stoi(argv[3]);
 	int numberOfSpheres = std::stoi(argv[4]);
-	const char* imageFilename = (argc == 6 ? argv[5] : nullptr);
+	int maxBounces = std::stoi(argv[5]);
+	const char* imageFilename = (argc == 7 ? argv[6] : nullptr);
 
 	// setup-code for raytracer
 	std::vector<Color> framebuffer;
@@ -107,89 +109,89 @@ int main(int argc, char* argv[])
 	std::vector<Color> framebufferCopy;
 	framebufferCopy.resize(width * height);
 
-	int maxBounces = 5;
-	int maxSpheres = 100;
+	Raytracer rt = Raytracer(width, height, framebuffer, framebufferCopy, raysPerPixel, maxBounces, numberOfSpheres);
+	MemoryPool<Material> materials(numberOfSpheres);
 
-	Raytracer rt = Raytracer(width, height, framebuffer, framebufferCopy, raysPerPixel, maxBounces, maxSpheres);
-
-	MemoryPool<Material> materials(100);
-
+	// create some spheres
 	uint32_t seed = 1337420;
 
-	{
-		Material* mat = materials.GetNew();
-		mat->type = MaterialType::Lambertian;
-		mat->color = { 0.5f,0.5f,0.5f };
-		mat->roughness = 0.3f;
-		Sphere* ground = rt.GetNewSphere();
-		*ground = Sphere(1000, {0,-1000,-1}, mat);
-	}
-
+	int matType = 0;
 	for (int i = 0; i < numberOfSpheres; i++)
 	{
 		Material* mat = materials.GetNew();
-		mat->type = MaterialType::Lambertian;
+		switch (matType++)
+		{
+		case 0:
+			mat->type = MaterialType::Lambertian;
+			break;
+		case 1:
+			mat->type = MaterialType::Conductor;
+			break;
+		case 2:
+			mat->type = MaterialType::Dielectric;
+			matType = 0;
+			break;
+		}
 		float r = RandomFloat(++seed);
 		float g = RandomFloat(++seed);
 		float b = RandomFloat(++seed);
 		mat->color = { r,g,b };
 		mat->roughness = RandomFloat(++seed);
-		const float span = 10.0f;
-		Sphere* sphere = rt.GetNewSphere();
+		
+		const vec3 minPos(-50.f, 0.f, -100.f);
+		const vec3 maxPos(50, 50, 20);
+		const vec3 span = maxPos - minPos;
 
-		*sphere = Sphere(
-			RandomFloat(++seed) * 0.7f + 0.2f,
-			{
-				RandomFloatNTP(++seed) * span,
-				RandomFloat(++seed) * span + 0.2f,
-				RandomFloatNTP(++seed) * span
-			},
-			mat
+		float radius = RandomFloat(++seed) * 1.5f + 0.5f;
+		vec3 pos(
+			minPos.x + span.x * RandomFloat(++seed),
+			minPos.y + span.y * RandomFloat(++seed),
+			minPos.z + span.z * RandomFloat(++seed)
 		);
+
+		*rt.GetNewSphere() = Sphere(radius, pos, mat);
 	}
+
+	rt.CreateBoundingSpheres();
+	std::cout << "number of bounding spheres: " << rt.boundingSpheres.Count() << std::endl;
 	
-	vec3 camPos = { 0,1.0f,10.0f };
-	vec3 moveDir = { 0,0,0 };
-	float pitch = 0;
-	float yaw = 0;
-	float oldx = 0;
-	float oldy = 0;
-	float rotx = 0;
-	float roty = 0;
+	vec3 camPos = { 0.f, 10.0f, 0.f };
+	float rotx = 180.f;
+	float roty = 0.f;
+
+	mat4 xMat = rotationx(rotx);
+	mat4 yMat = rotationy(roty);
+	mat4 cameraTransform = multiply(yMat, xMat);
+
+	cameraTransform.m30 = camPos.x;
+	cameraTransform.m31 = camPos.y;
+	cameraTransform.m32 = camPos.z;
+
+	rt.SetViewMatrix(cameraTransform);
 
 	std::cout << "starting performance test..." << std::endl;
 	Timer timer;
 	timer.Start();
 
 	// render "loop"
-	const int numberOfIterations = 1200;
+	const int numberOfIterations = 1;
 
 	for (int i = 0; i < numberOfIterations; i++)
 	{
-		moveDir = normalize(moveDir);
-
-		mat4 xMat = (rotationx(rotx));
-		mat4 yMat = (rotationy(roty));
-		mat4 cameraTransform = multiply(yMat, xMat);
-
-		camPos = camPos + transform(moveDir * 0.2f, cameraTransform);
-
-		cameraTransform.m30 = camPos.x;
-		cameraTransform.m31 = camPos.y;
-		cameraTransform.m32 = camPos.z;
-
-		rt.SetViewMatrix(cameraTransform);
-
 		rt.Raytrace();
 	}
 
 	timer.Stop();
 	float duration = timer.GetMillisecondDuration() / numberOfIterations;
-	float raysSpawned = (float)Ray::spawnedCount / numberOfIterations;
+	size_t rayCount = 0;
+	for (int i = 0; i < rt.rayCounters.size(); i++)
+	{
+		rayCount += rt.rayCounters[i];
+	}
 	std::cout << "test completed:" << std::endl;
 	std::cout << "\taverage time per frame: " << duration << " ms" << std::endl;
-	std::cout << "\taverage number of rays spawned per frame: " << raysSpawned << std::endl;
-	std::cout << "\taverage MegaRays/s: " << ((raysSpawned / 1000000.f) / (duration / 1000.f)) << std::endl;
+	std::cout << "\tnumber of rays spawned last frame: " << rayCount << std::endl;
+	std::cout << "\taverage MegaRays/s: " << (((float)rayCount / 1000000.f) / (duration / 1000.f)) << std::endl;
 
 	// save result image
 	if (imageFilename != nullptr)

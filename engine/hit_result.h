@@ -12,8 +12,6 @@ struct HitResult
     vec3 p;
     // normal
     vec3 normal;
-    // hit material, or nullptr
-    Material* material = nullptr;
     // intersection distance
     float t = FLT_MAX;
 };

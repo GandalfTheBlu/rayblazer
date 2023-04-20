@@ -35,47 +35,45 @@ public:
     {
         return material->color;
     }
+};
 
-    bool Intersect(const Ray& ray, float maxDist, HitResult& outHitInfo)
+inline bool IntersectSphere(const Ray& ray, const vec3& center, float radius, float maxDist, HitResult& outHitInfo)
+{
+    vec3 oc = ray.origin - center;
+    float b = dot(oc, ray.dir);
+
+    // early out if sphere is "behind" ray
+    if (b > 0)
+        return false;
+
+    float a = dot(ray.dir, ray.dir);
+    float c = dot(oc, oc) - radius * radius;
+    float discriminant = b * b - a * c;
+
+    if (discriminant > 0)
     {
-        vec3 oc = ray.origin - this->center;
-        vec3 dir = ray.dir;
-        float b = dot(oc, dir);
-    
-        // early out if sphere is "behind" ray
-        if (b > 0)
+        constexpr float minDist = 0.001f;
+        float div = 1.0f / a;
+        float sqrtDisc = std::sqrtf(discriminant);
+        float dist1 = (-b - sqrtDisc) * div;
+        float dist2 = (-b + sqrtDisc) * div;
+        float dist = dist1 < dist2 ? dist1 : dist2;
+
+        if (dist < minDist)
+            dist = dist2;
+
+        if (dist > maxDist)
             return false;
 
-        float a = dot(dir, dir);
-        float c = dot(oc, oc) - this->radius * this->radius;
-        float discriminant = b * b - a * c;
+        vec3 p = ray.PointAt(dist);
+        vec3 normal = (p - center) * (1.0f / radius);
 
-        if (discriminant > 0)
-        {
-            constexpr float minDist = 0.001f;
-            float div = 1.0f / a;
-            float sqrtDisc = std::sqrtf(discriminant);
-            float dist1 = (-b - sqrtDisc) * div;
-            float dist2 = (-b + sqrtDisc) * div;
-            float dist = dist1 < dist2 ? dist1 : dist2;
-            
-            if (dist < minDist)
-                dist = dist2;
+        outHitInfo.p = p;
+        outHitInfo.normal = normal;
+        outHitInfo.t = dist;
 
-            if (dist > maxDist)
-                return false;
-
-            vec3 p = ray.PointAt(dist);
-            vec3 normal = (p - this->center) * (1.0f / this->radius);
-
-            outHitInfo.p = p;
-            outHitInfo.normal = normal;
-            outHitInfo.t = dist;
-            outHitInfo.material = this->material;
-
-            return true;
-        }
-
-        return false;
+        return true;
     }
-};
+
+    return false;
+}

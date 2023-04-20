@@ -6,11 +6,14 @@ struct WorkArgs
     Raytracer* self;
     int pixelX, pixelY;
     size_t pixelCount;
+    int workerIndex;
 };
 
 void RenderThreadWork(const WorkArgs& args)
 {
-    args.self->RaytraceGroup(args.pixelX, args.pixelY, args.pixelCount);
+    size_t rayCount = 0;
+    args.self->RaytraceGroup(args.pixelX, args.pixelY, args.pixelCount, &rayCount);
+    args.self->rayCounters[args.workerIndex] = rayCount;
 }
 
 //------------------------------------------------------------------------------
@@ -25,6 +28,7 @@ Raytracer::Raytracer(size_t w, size_t h, std::vector<Color>& frameBuffer, std::v
     height(h),
     view(zero_mat()),
     frustum(zero_mat()),
+    boundingSpheres(maxSpheres),
     spheres(maxSpheres),
     renderThreads(std::thread::hardware_concurrency())
 {
@@ -33,7 +37,8 @@ Raytracer::Raytracer(size_t w, size_t h, std::vector<Color>& frameBuffer, std::v
     size_t pixelCount = width * height / renderThreads.size;
     for (int i = 0; i < renderThreads.size; i++)
     {
-        renderThreads.InitThread<WorkArgs>(RenderThreadWork, {this, x, y, pixelCount}, i);
+        rayCounters.push_back(0);
+        renderThreads.InitThread<WorkArgs>(RenderThreadWork, {this, x, y, pixelCount, i}, i);
         x += pixelCount;
         while (x >= width)
         {
@@ -45,10 +50,33 @@ Raytracer::Raytracer(size_t w, size_t h, std::vector<Color>& frameBuffer, std::v
 
 Raytracer::~Raytracer()
 {
-    
+
 }
 
-void Raytracer::RaytraceGroup(int pixelX, int pixelY, size_t pixelCount)
+void Raytracer::CreateBoundingSpheres()
+{
+    for (int i = 0; i < spheres.Count(); i++)
+    {
+        int j = 0;
+        for (; j < boundingSpheres.Count(); j++)
+        {
+            if (boundingSpheres[j]->TryAddSphere(i, spheres[i]->center, spheres[i]->radius))
+            {
+                break;
+            }
+        }
+        
+        if (j == boundingSpheres.Count())
+        {
+            *boundingSpheres.GetNew() = BoundingSphere();
+            boundingSpheres[j]->TryAddSphere(i, spheres[i]->center, spheres[i]->radius);
+        }
+    }
+
+    int a = 0;
+}
+
+void Raytracer::RaytraceGroup(int pixelX, int pixelY, size_t pixelCount, size_t* rayCount)
 {
     // just some random stuff that changes over time
     uint32_t seed = 1337420 + (pixelX | frameIndex ^ 45312) * 1234 + (pixelY | frameIndex ^ 31235) * 4321;
@@ -71,7 +99,7 @@ void Raytracer::RaytraceGroup(int pixelX, int pixelY, size_t pixelCount)
             float v = ((float(pixelY + RandomFloat(++seed)) * two_inv_height) - 1.0f);
 
             vec3 direction = normalize(transform({ u, v, -1.0f }, frustum));
-            color += TracePath(Ray(origin, direction), seed);
+            color += TracePath(Ray(origin, direction), seed, rayCount);
         }
 
         // divide by number of samples per pixel, to get the average of the distribution
@@ -108,7 +136,7 @@ Raytracer::Raytrace()
 /**
 */
 inline Color
-Raytracer::TracePath(const Ray& ray, uint32_t seed)
+Raytracer::TracePath(const Ray& ray, uint32_t seed, size_t* rayCount)
 {
     vec3 hitPoint;
     vec3 hitNormal;
@@ -119,6 +147,7 @@ Raytracer::TracePath(const Ray& ray, uint32_t seed)
 
     for (int i = 0; i < bounces; i++)
     {
+        (*rayCount)++;
         if (!Raycast(updatedRay, hitPoint, hitNormal, hitMaterial, distance))
         {
             color = color * Skybox(updatedRay.dir);
@@ -139,23 +168,52 @@ Raytracer::TracePath(const Ray& ray, uint32_t seed)
 inline bool
 Raytracer::Raycast(const Ray& ray, vec3& hitPoint, vec3& hitNormal, Material*& hitMaterial, float& distance)
 {
-    bool isHit = false;
     HitResult closestHit;
+    int sphereIndex = -1;
 
-    for(int i=0; i<this->spheres.Count(); i++)
+    // no bounding spheres
+    /*for (int j = 0; j < spheres.Count(); j++)
     {
-        if (this->spheres[i]->Intersect(ray, closestHit.t, closestHit))
+        if (IntersectSphere(ray, spheres[j]->center, spheres[j]->radius, closestHit.t, closestHit))
         {
-            isHit = true;
+            sphereIndex = j;
+        }
+    }*/
+
+    HitResult boundingSphereHit;
+
+    for (int i = 0; i < boundingSpheres.Count(); i++)
+    {
+        BoundingSphere* bs = boundingSpheres[i];
+        vec3 toCenter = bs->center - ray.origin;
+        float distSquared = dot(toCenter, toCenter);
+        bool isInside = distSquared < bs->radius* bs->radius;
+
+        if (isInside || IntersectSphere(ray, bs->center, bs->radius, closestHit.t, boundingSphereHit))
+        {
+            for (int j = 0; j < bs->count; j++)
+            {
+                int index = bs->containedSphereIndices[j];
+                Sphere* s = spheres[index];
+                
+                if (IntersectSphere(ray, s->center, s->radius, closestHit.t, closestHit))
+                {
+                    sphereIndex = index;
+                }
+            }
         }
     }
-
-    hitPoint = closestHit.p;
-    hitNormal = closestHit.normal;
-    hitMaterial = closestHit.material;
-    distance = closestHit.t;
     
-    return isHit;
+    if (sphereIndex != -1)
+    {
+        hitPoint = closestHit.p;
+        hitNormal = closestHit.normal;
+        distance = closestHit.t;
+        hitMaterial = spheres[sphereIndex]->material;
+        return true;
+    }
+
+    return false;
 }
 
 

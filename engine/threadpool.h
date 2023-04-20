@@ -44,5 +44,6 @@ public:
 		pool[threadIndex].thread = new std::thread(wrapper, this, work, arguments, threadIndex);
 	}
 
+
 	void ExecuteAndWait();
 };

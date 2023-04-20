@@ -35,9 +35,9 @@ ImportanceSampleGGX_VNDF(float u1, float u2, float roughness, vec3 const& V, mat
     float sn = std::sqrtf(1.f - cs * cs);
     float t1 = r * cs;
     float t2 = r * sn;
-    float s = 0.5 * (1.0 + Vh.z);
+    float s = 0.5f * (1.0f + Vh.z);
     float t1sq = (t1 * t1);
-    t2 = (1.0 - s) * std::sqrtf(1.0 - t1sq) + s * t2;
+    t2 = (1.0f - s) * std::sqrtf(1.0f - t1sq) + s * t2;
 
     vec3 Nh = T1 * t1 + T2 * t2 + Vh * std::sqrtf(std::fmaxf(0.0f, 1.0f - t1sq - (t2 * t2)));
 
