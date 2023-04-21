@@ -89,7 +89,7 @@ void Material::BSDF_Conductor(Ray& inOutRay, const vec3& point, const vec3& norm
     else
     {
         outwardNormal = normal;
-        niOverNt = 1.0 / this->refractionIndex;
+        niOverNt = 1.f / this->refractionIndex;
         cosine = cosTheta / len(rayDir);
     }
 

@@ -30,7 +30,7 @@ ImportanceSampleGGX_VNDF(float u1, float u2, float roughness, vec3 const& V, mat
     vec3 T2 = cross(Vh, T1);
 
     float r = std::sqrtf(u1);
-    float phi = 2.0f * MPI * u2;
+    float phi = 2.0f * 3.141592f * u2;
     float cs = std::cos(phi);
     float sn = std::sqrtf(1.f - cs * cs);
     float t1 = r * cs;

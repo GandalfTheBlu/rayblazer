@@ -39,11 +39,11 @@ Raytracer::Raytracer(size_t w, size_t h, std::vector<Color>& frameBuffer, std::v
     {
         rayCounters.push_back(0);
         renderThreads.InitThread<WorkArgs>(RenderThreadWork, {this, x, y, pixelCount, i}, i);
-        x += pixelCount;
+        x += int(pixelCount);
         while (x >= width)
         {
             y++;
-            x -= width;
+            x -= int(width);
         }
     }
 }
@@ -83,7 +83,7 @@ void Raytracer::RaytraceGroup(int pixelX, int pixelY, size_t pixelCount, size_t*
 
     vec3 origin = get_position(view);
     float aspect = (float)width / height;
-    int row = pixelY * width;
+    int row = pixelY * int(width);
 
     float two_inv_width = 2.f / width;
     float two_inv_height = 2.f / height;
@@ -117,7 +117,7 @@ void Raytracer::RaytraceGroup(int pixelX, int pixelY, size_t pixelCount, size_t*
                 return;
             }
             pixelX = 0;
-            row = pixelY * width;
+            row = pixelY * int(width);
         }
     }
 }
