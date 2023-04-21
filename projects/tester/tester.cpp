@@ -115,8 +115,26 @@ int main(int argc, char* argv[])
 	// create some spheres
 	uint32_t seed = 1337420;
 
+	// floor
+	{
+		Material* mat = materials.GetNew();
+		mat->type = MaterialType::Lambertian;
+		float r = RandomFloat(++seed);
+		float g = RandomFloat(++seed);
+		float b = RandomFloat(++seed);
+		mat->color = { r,g,b };
+		mat->roughness = RandomFloat(++seed);
+		float radius = 1000.f;
+		vec3 pos(
+			0.f, -1000.f, 0.f
+		);
+
+		*rt.GetNewSphere() = Sphere(radius, pos, mat);
+	}
+
 	int matType = 0;
-	for (int i = 0; i < numberOfSpheres; i++)
+
+	for (int i = 0; i < numberOfSpheres-1; i++)
 	{
 		Material* mat = materials.GetNew();
 		switch (matType++)
@@ -156,7 +174,7 @@ int main(int argc, char* argv[])
 	std::cout << "number of bounding spheres: " << rt.boundingSpheres.Count() << std::endl;
 	
 	vec3 camPos = { 0.f, 10.0f, 0.f };
-	float rotx = 180.f;
+	float rotx = 0.f;
 	float roty = 0.f;
 
 	mat4 xMat = rotationx(rotx);
